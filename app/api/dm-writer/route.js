@@ -61,52 +61,13 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 8000,
+        max_tokens: 2000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: `Do multiple web searches to find everything about this creator: ${url}
-${creatorName ? `Their name might be: ${creatorName}` : ''}
+          content: `Quick search about this creator: ${url}
 
-You MUST do at least 3 separate searches:
-1. Search for the exact URL: "${url}"
-2. Search for the creator's name + "instagram" or "tiktok" (extract their username from the URL)
-3. Search for their name + "workshop OR course OR ebook OR product OR book"
-
-After searching, compile EVERYTHING you found:
-
-## Profile
-- Full name
-- Username/handle
-- Niche (food, fitness, business, etc.)
-- What language they post in
-
-## Numbers
-- Exact Instagram followers
-- Exact TikTok followers + total likes
-- YouTube subscribers if applicable
-- Engagement quality (are comments genuine?)
-
-## What They Sell
-- List EVERY product: courses, workshops, ebooks, merch, events, coaching
-- Brand deals or sponsorships visible
-- Link in bio products, shop pages
-- Email lists or newsletter
-- Separate business emails found
-
-## Reputation
-- Books published
-- TV appearances, press, podcast features
-- Awards or notable achievements
-- Viral content moments
-- Their brand name or project name
-
-## Contact Info
-- Business email (from bio or website)
-- Website URL
-- Other public contact methods
-
-Be thorough. Use real numbers and real facts. If you can't find something, say so explicitly.`,
+Find their name, follower counts (Instagram/TikTok/YouTube), what they sell (courses, workshops, products), and what niche they're in. Keep it brief — just the key facts for writing a DM.`,
         }],
       }),
     });
