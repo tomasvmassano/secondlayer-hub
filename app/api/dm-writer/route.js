@@ -101,30 +101,48 @@ Find their name, follower counts (Instagram/TikTok/YouTube), what they sell (cou
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: 4000,
         system: DM_SYSTEM,
         messages: [{
           role: 'user',
-          content: `You MUST write 3 DMs. NEVER refuse. NEVER ask for more info. Use whatever data is below. NEVER use dashes (—, –, -) as punctuation.
+          content: `NEVER refuse. NEVER ask for more info. NEVER use dashes as punctuation. Write the FULL outreach sequence below.
 
 Sender: ${senderName || 'Tomás'}
 Language: ${language || 'Auto-detect, default Portuguese.'}
 URL: ${url}
-${notes ? `\nPersonal notes from sender (use this info in at least one DM variation):\n${notes}` : ''}
+${notes ? `\nPersonal notes from sender (use naturally where relevant):\n${notes}` : ''}
 
 ## Research
 ${research}
 
-Write 3 DMs. Each must feel different. If personal notes were provided, incorporate them naturally into one or two of the variations.
+Write the complete 5-touchpoint outreach sequence. Each message must add NEW value. Never repeat the same angle. Every message should feel human, personal, and non-spammy.
 
-## DM 1 (Primary)
-[the DM]
+## DAY 1 — DM (First Contact)
+The opening DM. Personal, short, reference their work broadly. CTA: watch a short video.
+[write the DM]
 
-## DM 2 (Alternative)
-[the DM]
+## DAY 1 — EMAIL (Same Day)
+Slightly more detailed than the DM. Same angle but expanded. Professional but warm. Include a subject line.
+Subject: [subject line]
+[write the email body]
 
-## DM 3 (Alternative)
-[the DM]`,
+## DAY 3 — DM (The Nudge)
+Short, casual follow-up. NOT "viste a mensagem?" but a new observation about their niche or content that shows you're paying attention. Add one new piece of value.
+[write the DM]
+
+## DAY 7 — EMAIL (The Proof)
+Share a concrete (but anonymous) example: "Um criador com uma audiência parecida com a tua..." with realistic numbers. Don't name anyone. Make it believable. CTA: video or quick call. Include subject line.
+Subject: [subject line]
+[write the email body]
+
+## DAY 10 — DM (The Soft Close)
+Last DM. Light, zero pressure. "Se o timing não é o melhor, sem stress" energy. Plant a seed by referencing something about their recent work. Leave door open.
+[write the DM]
+
+## DAY 14 — EMAIL (The Clean Close)
+Final email. Respectful close. "Não vou voltar a enviar mensagem." Summarize the opportunity in one sentence. Leave the door open forever. Include subject line.
+Subject: [subject line]
+[write the email body]`,
         }],
       }),
     });
