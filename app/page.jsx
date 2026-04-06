@@ -6,7 +6,7 @@ const TOOLS = [
   {
     name: "Offer Builder",
     description: "Build Grand Slam Offers using Hormozi frameworks. AI-powered creator research, offer design, blind spot audit, objection playbook, and revenue projections.",
-    url: "https://secondlayer-offer-builder.vercel.app",
+    url: "/offer-builder",
     status: "live",
     icon: "\u26A1",
   },
