@@ -47,7 +47,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { url, senderName, language } = body;
+  const { url, senderName, language, creatorName } = body;
   if (!url) return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
 
   try {

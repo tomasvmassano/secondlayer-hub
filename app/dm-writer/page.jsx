@@ -96,7 +96,7 @@ export default function DMWriter() {
               <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#4a4840", marginBottom: 5, letterSpacing: "0.05em", textTransform: "uppercase" }}>Language</label>
               <select style={{ ...inputStyle, cursor: "pointer", appearance: "none" }} value={language} onChange={e => setLanguage(e.target.value)}>
                 <option value="Auto" style={{ background: "#080604" }}>Auto-detect</option>
-                <option value="Portugu\u00eas" style={{ background: "#080604" }}>Portugu\u00eas</option>
+                <option value="Português" style={{ background: "#080604" }}>Português</option>
                 <option value="English" style={{ background: "#080604" }}>English</option>
               </select>
             </div>
