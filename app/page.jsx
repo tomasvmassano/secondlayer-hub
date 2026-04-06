@@ -11,6 +11,13 @@ const TOOLS = [
     icon: "\u26A1",
   },
   {
+    name: "DM Writer",
+    description: "Paste a creator's URL, get 3 personalized cold DMs based on real research about them. Copy and send in seconds.",
+    url: "/dm-writer",
+    status: "live",
+    icon: "\u2709\uFE0F",
+  },
+  {
     name: "Creator Pitch Page",
     description: "Generate a shareable, branded pitch page for each creator. Shows the opportunity, the offer, revenue projections, and what Second Layer builds.",
     url: null,
