@@ -156,7 +156,7 @@ Subject: [subject line]
 
 ## DAY 10 — DM (The Soft Close)
 MAXIMUM 1-2 sentences. Zero pressure. Pick ONE approach:
-- "Se o timing não for o melhor, sem stress. ${loomUrl ? `Deixo aqui o link caso queiras ver: ${loomUrl}` : 'Fica o convite em aberto.'}"
+- "Se o timing não for o melhor, sem stress. Fica o convite em aberto."
 - "Ainda faz sentido falar sobre isto?"
 - Reference something recent from their content + soft close
 [write the DM — MAX 2 sentences]
