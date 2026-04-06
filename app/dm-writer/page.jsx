@@ -49,8 +49,6 @@ export default function DMWriter() {
   const [senderName, setSenderName] = useState("Tomas");
   const [language, setLanguage] = useState("Auto");
   const [notes, setNotes] = useState("");
-  const [loomUrl, setLoomUrl] = useState("");
-  const [followers, setFollowers] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -63,7 +61,7 @@ export default function DMWriter() {
       const r = await fetch("/api/dm-writer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), senderName, language: language === "Auto" ? "" : language, notes: notes.trim(), loomUrl: loomUrl.trim(), followers: followers.trim() }),
+        body: JSON.stringify({ url: url.trim(), senderName, language: language === "Auto" ? "" : language, notes: notes.trim() }),
       });
       if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error || "Failed"); }
       const data = await r.json();
@@ -138,18 +136,6 @@ export default function DMWriter() {
             <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#4a4840", marginBottom: 5, letterSpacing: "0.05em", textTransform: "uppercase" }}>Personal Notes <span style={{ fontWeight: 400, color: "#2a2720" }}>(optional)</span></label>
             <textarea style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} placeholder="Something specific you know or want to mention. E.g. 'Met her at a conference', 'She just launched a book'" value={notes} onChange={e => setNotes(e.target.value)}
               onFocus={e => e.target.style.borderColor = "#7A0E18"} onBlur={e => e.target.style.borderColor = "#1e1b17"} />
-          </div>
-          <div style={{ display: "flex", gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#4a4840", marginBottom: 5, letterSpacing: "0.05em", textTransform: "uppercase" }}>Followers <span style={{ fontWeight: 400, color: "#2a2720" }}>(primary platform)</span></label>
-              <input type="text" style={inputStyle} placeholder="e.g. 85000 or 85K" value={followers} onChange={e => setFollowers(e.target.value)}
-                onFocus={e => e.target.style.borderColor = "#7A0E18"} onBlur={e => e.target.style.borderColor = "#1e1b17"} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#4a4840", marginBottom: 5, letterSpacing: "0.05em", textTransform: "uppercase" }}>Loom / Doc Link <span style={{ fontWeight: 400, color: "#2a2720" }}>(optional)</span></label>
-              <input type="text" style={inputStyle} placeholder="https://loom.com/share/..." value={loomUrl} onChange={e => setLoomUrl(e.target.value)}
-                onFocus={e => e.target.style.borderColor = "#7A0E18"} onBlur={e => e.target.style.borderColor = "#1e1b17"} />
-            </div>
           </div>
         </div>
 

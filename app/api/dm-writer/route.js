@@ -56,21 +56,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { url, senderName, language, creatorName, notes, loomUrl, followers } = body;
-
-  // Calculate estimated monthly revenue: followers × 0.675% × WTP mid price
-  // WTP mid prices by common niches (simplified lookup)
-  const estimatedRevenue = (() => {
-    let f = 0;
-    if (followers) {
-      f = parseFloat(String(followers).replace(/[,.\s]/g, '').replace(/k/i, '000').replace(/m/i, '000000'));
-    }
-    if (!f || f < 100) return null;
-    const activeClients = Math.round(f * 0.00675);
-    // Use €39 as default mid WTP (most common niches)
-    const monthly = activeClients * 39;
-    return { activeClients, monthly, followers: f };
-  })();
+  const { url, senderName, language, creatorName, notes } = body;
   if (!url) return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
 
   try {
@@ -90,7 +76,11 @@ export async function POST(request) {
           role: 'user',
           content: `Quick search about this creator: ${url}
 
-Find their name, follower counts (Instagram/TikTok/YouTube), what they sell (courses, workshops, products), and what niche they're in. Keep it brief — just the key facts for writing a DM.`,
+Find their name, follower counts (Instagram/TikTok/YouTube), what they sell (courses, workshops, products), and what niche they're in. Keep it brief.
+
+IMPORTANT: At the very end, write this exact line with the Instagram follower count as a number:
+FOLLOWERS: [number]
+Example: FOLLOWERS: 85000`,
         }],
       }),
     });
@@ -104,6 +94,18 @@ Find their name, follower counts (Instagram/TikTok/YouTube), what they sell (cou
       .filter(b => b.type === 'text')
       .map(b => b.text)
       .join('\n\n');
+
+    // Extract follower count from research and calculate revenue
+    const followerMatch = research.match(/FOLLOWERS:\s*([\d,.\s]+)/i);
+    let estimatedRevenue = null;
+    if (followerMatch) {
+      const f = parseInt(followerMatch[1].replace(/[,.\s]/g, ''), 10);
+      if (f > 100) {
+        const activeClients = Math.round(f * 0.00675);
+        const monthly = activeClients * 39; // €39 default WTP mid
+        estimatedRevenue = { activeClients, monthly, followers: f };
+      }
+    }
 
     // Step 2: Generate the DM based on research
     const dmResponse = await fetch('https://api.anthropic.com/v1/messages', {
