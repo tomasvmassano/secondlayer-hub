@@ -56,7 +56,21 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { url, senderName, language, creatorName, notes } = body;
+  const { url, senderName, language, creatorName, notes, loomUrl, followers } = body;
+
+  // Calculate estimated monthly revenue: followers × 0.675% × WTP mid price
+  // WTP mid prices by common niches (simplified lookup)
+  const estimatedRevenue = (() => {
+    let f = 0;
+    if (followers) {
+      f = parseFloat(String(followers).replace(/[,.\s]/g, '').replace(/k/i, '000').replace(/m/i, '000000'));
+    }
+    if (!f || f < 100) return null;
+    const activeClients = Math.round(f * 0.00675);
+    // Use €39 as default mid WTP (most common niches)
+    const monthly = activeClients * 39;
+    return { activeClients, monthly, followers: f };
+  })();
   if (!url) return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
 
   try {
@@ -127,8 +141,11 @@ Subject: [subject line]
 [write the email body]
 
 ## DAY 3 — DM (The Nudge)
-Short, casual follow-up. NOT "viste a mensagem?" but a new observation about their niche or content that shows you're paying attention. Add one new piece of value.
-[write the DM]
+MAXIMUM 1-2 sentences. Must feel like a text to a friend. Pick ONE of these approaches:
+- Just their name + "?" (e.g. "Rita?")
+- A one-liner with a revenue number: ${estimatedRevenue ? `"Fiz umas contas e acredito que consigas chegar aos €${estimatedRevenue.monthly.toLocaleString()}/mês recorrentes com o que já tens. Viste o vídeo?"` : '"Fiz umas contas e o potencial que tens é sério. Viste o vídeo?"'}
+- A sticker/meme reference: "[insert relevant meme] + one short line"
+[write the DM — MAX 2 sentences]
 
 ## DAY 7 — EMAIL (The Proof)
 Share a concrete (but anonymous) example: "Um criador com uma audiência parecida com a tua..." with realistic numbers. Don't name anyone. Make it believable. CTA: video or quick call. Include subject line.
@@ -136,8 +153,11 @@ Subject: [subject line]
 [write the email body]
 
 ## DAY 10 — DM (The Soft Close)
-Last DM. Light, zero pressure. "Se o timing não é o melhor, sem stress" energy. Plant a seed by referencing something about their recent work. Leave door open.
-[write the DM]
+MAXIMUM 1-2 sentences. Zero pressure. Pick ONE approach:
+- "Se o timing não for o melhor, sem stress. ${loomUrl ? `Deixo aqui o link caso queiras ver: ${loomUrl}` : 'Fica o convite em aberto.'}"
+- "Ainda faz sentido falar sobre isto?"
+- Reference something recent from their content + soft close
+[write the DM — MAX 2 sentences]
 
 ## DAY 14 — EMAIL (The Clean Close)
 Final email. Respectful close. "Não vou voltar a enviar mensagem." Summarize the opportunity in one sentence. Leave the door open forever. Include subject line.
