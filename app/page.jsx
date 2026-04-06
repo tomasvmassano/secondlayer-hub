@@ -98,7 +98,7 @@ export default function Hub() {
           <div style={{ fontSize: 9, fontWeight: 600, color: "#22c55e", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Active Tools</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {live.map(tool => (
-              <a key={tool.name} href={tool.url} target="_blank" rel="noopener noreferrer"
+              <a key={tool.name} href={tool.url}
                 style={{
                   display: "block", padding: "24px 22px", borderRadius: 6,
                   background: "#080604", border: "1px solid #1e1b17",
