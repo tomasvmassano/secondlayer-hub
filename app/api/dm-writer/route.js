@@ -14,19 +14,21 @@ const DM_SYSTEM = `You are the DM outreach writer for Second Layer. You write co
 8. Default to Portuguese unless clearly English-speaking.
 9. NEVER mention pricing, commission, %, business model, "partnership", "collaboration", "proposal", "agency", or "services".
 10. NEVER mention specific details you're not 100% sure about (like "levas o estúdio a casa" or "desde newborns até idosos"). If unsure, stay broad — describe the quality or emotion of their work instead.
+11. NEVER use em dashes (—), en dashes (–), or hyphens (-) as punctuation in the DM text. No "sem mudares nada — do que fazes". Use commas, periods, or just restructure the sentence. Dashes are an AI writing tell.
 
 ## GOOD: Broad but genuine
 "Reparei no teu trabalho e é raro encontrar alguém tão dedicado a fotografar os momentos mais ternos da vida. O resultado final mostra o cuidado que tens com cada cliente."
 
 ## GOOD: Hard numbers when confident
 "2.6M de likes no TikTok, com uma audiência que claramente não te segue por acaso."
-"470K seguidores com o engagement que tens no Terapia no Fogo é o tipo de audiência que a maioria dos criadores nunca vai ter."
 
 ## BAD: Too specific, might be wrong
 "O facto de levares o estúdio até casa das pessoas mostra o cuidado que tens."
-"Vi que dás workshops de panificação todos os sábados no Porto."
 
-## Examples
+## BAD: Uses dashes
+"sem mudares nada — do que fazes" (NEVER use dashes)
+
+## Examples (notice: zero dashes in any of them)
 
 "Olá Rita, como estás?
 Sigo o teu trabalho há algum tempo e é impossível não reparar no alcance que tens. 2.6M de likes no TikTok, com uma audiência que claramente não te segue por acaso.
@@ -54,7 +56,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { url, senderName, language, creatorName } = body;
+  const { url, senderName, language, creatorName, notes } = body;
   if (!url) return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
 
   try {
@@ -103,18 +105,18 @@ Find their name, follower counts (Instagram/TikTok/YouTube), what they sell (cou
         system: DM_SYSTEM,
         messages: [{
           role: 'user',
-          content: `IMPORTANT: You MUST write 3 DMs. NEVER refuse. NEVER ask for more information. NEVER say you can't access a profile. Use whatever data is in the research below — if some details are missing, work with what you have. A DM with partial data is always better than no DM.
+          content: `You MUST write 3 DMs. NEVER refuse. NEVER ask for more info. Use whatever data is below. NEVER use dashes (—, –, -) as punctuation.
 
-Sender name: ${senderName || 'Tomás'}
-Language preference: ${language || 'Auto-detect from their content. Default to Portuguese if unclear.'}
-Profile URL: ${url}
+Sender: ${senderName || 'Tomás'}
+Language: ${language || 'Auto-detect, default Portuguese.'}
+URL: ${url}
+${notes ? `\nPersonal notes from sender (use this info in at least one DM variation):\n${notes}` : ''}
 
 ## Research
 ${research}
 
-Now write exactly 3 DMs using the research above. Each DM must reference a SPECIFIC fact from the research (follower count, product name, achievement, content style). If research is thin, reference their niche and content style.
+Write 3 DMs. Each must feel different. If personal notes were provided, incorporate them naturally into one or two of the variations.
 
-Format:
 ## DM 1 (Primary)
 [the DM]
 

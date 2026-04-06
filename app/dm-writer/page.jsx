@@ -18,6 +18,7 @@ export default function DMWriter() {
   const [url, setUrl] = useState("");
   const [senderName, setSenderName] = useState("Tomas");
   const [language, setLanguage] = useState("Auto");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -30,7 +31,7 @@ export default function DMWriter() {
       const r = await fetch("/api/dm-writer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), senderName, language: language === "Auto" ? "" : language }),
+        body: JSON.stringify({ url: url.trim(), senderName, language: language === "Auto" ? "" : language, notes: notes.trim() }),
       });
       if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error || "Failed"); }
       const data = await r.json();
@@ -100,6 +101,11 @@ export default function DMWriter() {
                 <option value="English" style={{ background: "#080604" }}>English</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#4a4840", marginBottom: 5, letterSpacing: "0.05em", textTransform: "uppercase" }}>Personal Notes <span style={{ fontWeight: 400, color: "#2a2720" }}>(optional)</span></label>
+            <textarea style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} placeholder="Something specific you know or want to mention. E.g. 'Met her at a conference', 'She just launched a book', 'Mention her podcast episode about mindset'" value={notes} onChange={e => setNotes(e.target.value)}
+              onFocus={e => e.target.style.borderColor = "#7A0E18"} onBlur={e => e.target.style.borderColor = "#1e1b17"} />
           </div>
         </div>
 
