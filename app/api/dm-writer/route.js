@@ -60,24 +60,53 @@ export async function POST(request) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4000,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: `Search the web thoroughly for this creator's social media profile: ${url}
+          content: `Do multiple web searches to find everything about this creator: ${url}
+${creatorName ? `Their name might be: ${creatorName}` : ''}
 
-Find:
-- Their full name
-- Exact follower/subscriber count on all platforms
-- What they're known for (niche, content style)
-- Any products they sell (courses, ebooks, workshops, merch, events)
-- Notable achievements (TV, press, viral content, books)
-- Their brand name or project name if they have one
-- Any evidence of monetization (link in bio, shop, etc.)
+You MUST do at least 3 separate searches:
+1. Search for the exact URL: "${url}"
+2. Search for the creator's name + "instagram" or "tiktok" (extract their username from the URL)
+3. Search for their name + "workshop OR course OR ebook OR product OR book"
+
+After searching, compile EVERYTHING you found:
+
+## Profile
+- Full name
+- Username/handle
+- Niche (food, fitness, business, etc.)
 - What language they post in
 
-Be specific — exact numbers, real product names, real facts.`,
+## Numbers
+- Exact Instagram followers
+- Exact TikTok followers + total likes
+- YouTube subscribers if applicable
+- Engagement quality (are comments genuine?)
+
+## What They Sell
+- List EVERY product: courses, workshops, ebooks, merch, events, coaching
+- Brand deals or sponsorships visible
+- Link in bio products, shop pages
+- Email lists or newsletter
+- Separate business emails found
+
+## Reputation
+- Books published
+- TV appearances, press, podcast features
+- Awards or notable achievements
+- Viral content moments
+- Their brand name or project name
+
+## Contact Info
+- Business email (from bio or website)
+- Website URL
+- Other public contact methods
+
+Be thorough. Use real numbers and real facts. If you can't find something, say so explicitly.`,
         }],
       }),
     });
@@ -106,16 +135,16 @@ Be specific — exact numbers, real product names, real facts.`,
         system: DM_SYSTEM,
         messages: [{
           role: 'user',
-          content: `Write a cold DM to this creator based on the research below.
+          content: `IMPORTANT: You MUST write 3 DMs. NEVER refuse. NEVER ask for more information. NEVER say you can't access a profile. Use whatever data is in the research below — if some details are missing, work with what you have. A DM with partial data is always better than no DM.
 
 Sender name: ${senderName || 'Tomás'}
-Language preference: ${language || 'Auto-detect from their content'}
+Language preference: ${language || 'Auto-detect from their content. Default to Portuguese if unclear.'}
 Profile URL: ${url}
 
 ## Research
 ${research}
 
-Write exactly ONE DM. Follow the system rules exactly. Then write 2 alternative versions with different angles/hooks.
+Now write exactly 3 DMs using the research above. Each DM must reference a SPECIFIC fact from the research (follower count, product name, achievement, content style). If research is thin, reference their niche and content style.
 
 Format:
 ## DM 1 (Primary)
