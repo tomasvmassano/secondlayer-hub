@@ -5,200 +5,157 @@ const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAAAlCAAAAAAi
 const TOOLS = [
   {
     name: "Offer Builder",
-    desc: "AI-powered creator research, Grand Slam Offer design, blind spot audit, and revenue projections.",
+    description: "Build Grand Slam Offers using Hormozi frameworks. AI-powered creator research, offer design, blind spot audit, objection playbook, and revenue projections.",
     url: "/offer-builder",
     status: "live",
-    span: 2,
+    icon: "\u26A1",
   },
   {
     name: "DM Writer",
-    desc: "Full 5-touchpoint outreach sequence. DMs and emails based on real creator research.",
+    description: "Paste a creator's URL, get 3 personalized cold DMs based on real research about them. Copy and send in seconds.",
     url: "/dm-writer",
     status: "live",
-    span: 1,
-  },
-  {
-    name: "Past Offers",
-    desc: "View and share all generated offer analyses.",
-    url: "/dashboard",
-    status: "live",
-    span: 1,
+    icon: "\u2709\uFE0F",
   },
   {
     name: "Creator Pitch Page",
-    desc: "Shareable branded pitch page per creator with revenue projections.",
+    description: "Generate a shareable, branded pitch page for each creator. Shows the opportunity, the offer, revenue projections, and what Second Layer builds.",
     url: null,
     status: "planned",
-    span: 1,
+    icon: "\uD83C\uDFAF",
   },
   {
     name: "Launch Blueprint",
-    desc: "Week-by-week build plan. Tasks, deliverables, timeline to launch.",
+    description: "Week-by-week build plan after signing a creator. Tasks assigned to Second Layer vs Creator, deliverables checklist, timeline to launch.",
     url: null,
     status: "planned",
-    span: 1,
+    icon: "\uD83D\uDCC5",
   },
   {
     name: "Sales Page Generator",
-    desc: "Generate sales page copy from the offer. Ready for Webflow.",
+    description: "Generate sales page copy from the Grand Slam Offer — headline, value stack, FAQ, CTA. Ready to paste into Webflow.",
     url: null,
     status: "planned",
-    span: 1,
+    icon: "\uD83D\uDCDD",
   },
   {
     name: "Content Calendar",
-    desc: "30 days of content ideas based on Core Four lead gen.",
+    description: "30 days of content ideas for the creator based on Core Four lead gen. Hooks, formats, CTAs that funnel to the offer.",
     url: null,
     status: "planned",
-    span: 1,
+    icon: "\uD83D\uDCC6",
   },
   {
-    name: "Email Sequences",
-    desc: "Full nurture sequences. Welcome, value, pitch, close.",
+    name: "Email Sequence Builder",
+    description: "Generate full nurture sequences — welcome, value, pitch, cart close. Based on offer psychology and audience analysis.",
     url: null,
     status: "planned",
-    span: 1,
+    icon: "\u2709\uFE0F",
   },
   {
     name: "Creator Dashboard",
-    desc: "Post-launch tracking. Performance vs projections.",
+    description: "Post-launch tracking. Real performance vs projections — sign-ups, revenue, churn. Flags when adjustments are needed.",
     url: null,
     status: "planned",
-    span: 1,
+    icon: "\uD83D\uDCCA",
   },
 ];
 
-function ToolCard({ tool }) {
-  const isLive = tool.status === "live";
-  const Tag = isLive ? "a" : "div";
-  const props = isLive ? { href: tool.url } : {};
-
-  return (
-    <Tag {...props}
-      style={{
-        gridColumn: tool.span === 2 ? "span 2" : "span 1",
-        display: "flex", flexDirection: "column", justifyContent: "space-between",
-        padding: tool.span === 2 ? "36px 32px" : "28px 24px",
-        borderRadius: 16,
-        background: isLive ? "#141414" : "#0f0f0f",
-        border: "1px solid rgba(255,255,255,0.04)",
-        textDecoration: "none", color: "inherit",
-        cursor: isLive ? "pointer" : "default",
-        transition: "border-color 0.2s ease, background 0.2s ease",
-        minHeight: tool.span === 2 ? 180 : 140,
-        position: "relative",
-        overflow: "hidden",
-        opacity: isLive ? 1 : 0.5,
-      }}
-      onMouseEnter={isLive ? e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "#1a1a1a"; } : undefined}
-      onMouseLeave={isLive ? e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)"; e.currentTarget.style.background = "#141414"; } : undefined}
-    >
-      {/* Subtle gradient overlay */}
-      {isLive && <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%)", pointerEvents: "none" }} />}
-
-      <div style={{ position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: tool.span === 2 ? 16 : 12 }}>
-          <h3 style={{
-            fontSize: tool.span === 2 ? 24 : 18,
-            fontWeight: 600, margin: 0, color: "#f5f5f5",
-            letterSpacing: "-0.02em",
-          }}>
-            {tool.name}
-          </h3>
-          {isLive && (
-            <span style={{
-              fontSize: 9, fontWeight: 500, letterSpacing: "0.06em",
-              padding: "3px 8px", borderRadius: 6,
-              background: "rgba(34,197,94,0.1)", color: "#22c55e",
-            }}>LIVE</span>
-          )}
-          {!isLive && (
-            <span style={{
-              fontSize: 9, fontWeight: 500, letterSpacing: "0.06em",
-              padding: "3px 8px", borderRadius: 6,
-              background: "rgba(255,255,255,0.04)", color: "#555",
-            }}>SOON</span>
-          )}
-        </div>
-        <p style={{
-          fontSize: tool.span === 2 ? 15 : 13,
-          color: "#888", margin: 0, lineHeight: 1.6,
-          maxWidth: tool.span === 2 ? 420 : 300,
-        }}>
-          {tool.desc}
-        </p>
-      </div>
-
-      {isLive && (
-        <div style={{ position: "relative", marginTop: 20 }}>
-          <span style={{
-            fontSize: 13, fontWeight: 500, color: "#f5f5f5",
-            display: "inline-flex", alignItems: "center", gap: 6,
-          }}>
-            Open
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17l10-10M7 7h10v10"/></svg>
-          </span>
-        </div>
-      )}
-    </Tag>
-  );
-}
+const STATUS_STYLES = {
+  live: { bg: "#22c55e14", color: "#22c55e", border: "#22c55e33", label: "LIVE" },
+  planned: { bg: "#eab30814", color: "#eab308", border: "#eab30833", label: "PLANNED" },
+  building: { bg: "#7A0E1814", color: "#7A0E18", border: "#7A0E1833", label: "BUILDING" },
+};
 
 export default function Hub() {
+  const live = TOOLS.filter(t => t.status === "live");
+  const planned = TOOLS.filter(t => t.status !== "live");
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0a", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <div style={{ minHeight: "100vh", background: "#010300", color: "#E2E4DF", fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif" }}>
+      {/* Header */}
+      <div style={{ padding: "20px 28px", borderBottom: "1px solid #141210", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <img src={LOGO_B64} alt="Second Layer" style={{ height: 16, opacity: 0.85 }} />
+          <span style={{ color: "#2a2720", fontSize: 14 }}>|</span>
+          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#4a4840" }}>HQ</span>
+        </div>
+      </div>
 
-      {/* Nav */}
-      <nav style={{
-        padding: "20px 40px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
-      }}>
-        <img src={LOGO_B64} alt="Second Layer" style={{ height: 16, opacity: 0.8 }} />
-        <a href="/dashboard" style={{
-          fontSize: 13, fontWeight: 500, color: "#555",
-          textDecoration: "none", transition: "color 0.15s",
-        }}
-          onMouseEnter={e => e.currentTarget.style.color = "#888"}
-          onMouseLeave={e => e.currentTarget.style.color = "#555"}
-        >
-          Past Offers
-        </a>
-      </nav>
-
-      {/* Content */}
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "64px 40px 100px" }}>
-
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px 80px" }}>
         {/* Hero */}
-        <div style={{ marginBottom: 64 }}>
-          <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase", color: "#555", margin: "0 0 16px" }}>
-            Operations Hub
-          </p>
-          <h1 style={{
-            fontSize: 52, fontWeight: 600, margin: "0 0 16px",
-            letterSpacing: "-0.03em", lineHeight: 1.1, color: "#f5f5f5",
-          }}>
-            Research. Pitch.<br />
-            <span style={{ color: "#7A0E18" }}>Close.</span>
+        <div style={{ marginBottom: 48 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 300, margin: "0 0 8px", letterSpacing: "-0.03em", lineHeight: 1.2 }}>
+            Second <span style={{ color: "#7A0E18", fontWeight: 600 }}>Layer</span> HQ
           </h1>
-          <p style={{ fontSize: 16, color: "#666", margin: 0, maxWidth: 440, lineHeight: 1.6 }}>
-            Every tool your team needs to find creators, build offers, and sign partnerships.
+          <p style={{ fontSize: 14, color: "#4a4840", margin: 0, maxWidth: 480 }}>
+            Operations hub. Every tool your team needs to research, pitch, sign, and launch creators.
           </p>
         </div>
 
-        {/* Bento Grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 14,
-        }}>
-          {TOOLS.map(tool => <ToolCard key={tool.name} tool={tool} />)}
+        {/* Live tools */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: "#22c55e", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Active Tools</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {live.map(tool => (
+              <a key={tool.name} href={tool.url}
+                style={{
+                  display: "block", padding: "24px 22px", borderRadius: 6,
+                  background: "#080604", border: "1px solid #1e1b17",
+                  textDecoration: "none", color: "inherit",
+                  transition: "border-color 0.15s, background 0.15s",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#7A0E18"; e.currentTarget.style.background = "#0a0806"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#1e1b17"; e.currentTarget.style.background = "#080604"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <span style={{ fontSize: 22 }}>{tool.icon}</span>
+                  <span style={{
+                    fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
+                    padding: "2px 8px", borderRadius: 999,
+                    background: STATUS_STYLES[tool.status].bg,
+                    color: STATUS_STYLES[tool.status].color,
+                    border: `1px solid ${STATUS_STYLES[tool.status].border}`,
+                  }}>{STATUS_STYLES[tool.status].label}</span>
+                </div>
+                <h3 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 6px", color: "#E2E4DF" }}>{tool.name}</h3>
+                <p style={{ fontSize: 12, color: "#6b6860", margin: 0, lineHeight: 1.5 }}>{tool.description}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Planned tools */}
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: "#eab308", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Coming Soon</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {planned.map(tool => (
+              <div key={tool.name} style={{
+                padding: "20px 18px", borderRadius: 6,
+                background: "#060503", border: "1px solid #0f0d0a",
+                opacity: 0.7,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <span style={{ fontSize: 18 }}>{tool.icon}</span>
+                  <span style={{
+                    fontSize: 7, fontWeight: 700, letterSpacing: "0.08em",
+                    padding: "2px 6px", borderRadius: 999,
+                    background: STATUS_STYLES[tool.status].bg,
+                    color: STATUS_STYLES[tool.status].color,
+                    border: `1px solid ${STATUS_STYLES[tool.status].border}`,
+                  }}>{STATUS_STYLES[tool.status].label}</span>
+                </div>
+                <h3 style={{ fontSize: 13, fontWeight: 600, margin: "0 0 4px", color: "#9a9890" }}>{tool.name}</h3>
+                <p style={{ fontSize: 11, color: "#4a4840", margin: 0, lineHeight: 1.5 }}>{tool.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 80, textAlign: "center" }}>
-          <p style={{ fontSize: 12, color: "#333", margin: 0 }}>Second Layer HQ</p>
+        <div style={{ marginTop: 60, paddingTop: 20, borderTop: "1px solid #0f0d0a", textAlign: "center" }}>
+          <p style={{ fontSize: 10, color: "#2a2720", margin: 0 }}>Second Layer HQ &middot; Internal Operations</p>
         </div>
       </div>
     </div>
