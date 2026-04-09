@@ -276,6 +276,11 @@ export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl, youtubeUr
     reputation: '',
     research: '',
     _apifyDebug: igData?._debug || null,
+    _rawBioCheck: {
+      bio: igData?.bio || '(empty)',
+      biography: 'checked in scraper',
+      externalUrl: igData?.externalUrl || '(empty)',
+    },
   };
 
   if (igData) {
