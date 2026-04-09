@@ -253,32 +253,28 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
                 </div>
 
                 {/* Badges */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-                  {creator.niche && (
+                {creator.niche && (
+                  <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 12, color: "#888", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6 }}>
                       {creator.niche}
                     </span>
-                  )}
-                  <span style={{ fontSize: 12, color: "#888", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6 }}>
-                    {creator.primaryPlatform || "Instagram"}
-                  </span>
-                  {creator.engagement && (
-                    <span style={{ fontSize: 12, color: "#888", padding: "6px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 6 }}>
-                      Engagement: {creator.engagement}
-                    </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Bio section */}
-            {creator.bio && (
-              <div style={{ marginBottom: 24 }}>
-                <p style={{ fontSize: 13, color: "#888", margin: 0, lineHeight: 1.6 }}>{creator.bio}</p>
+            {(creator.bio || creator.externalUrl) && (
+              <div style={{ marginBottom: 24, padding: "16px 18px", background: "#141414", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 12 }}>
+                <h3 style={{ fontSize: 10, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>Bio</h3>
+                {creator.bio && <p style={{ fontSize: 13, color: "#ccc", margin: "0 0 10px", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{creator.bio}</p>}
                 {creator.externalUrl && (
-                  <a href={creator.externalUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#7A0E18", textDecoration: "none", display: "inline-block", marginTop: 8 }}>
-                    {creator.externalUrl}
-                  </a>
+                  <div style={{ paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.06em" }}>Link in Bio</span>
+                    <a href={creator.externalUrl.startsWith("http") ? creator.externalUrl : "https://" + creator.externalUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#7A0E18", textDecoration: "none", display: "block", marginTop: 4 }}>
+                      {creator.externalUrl}
+                    </a>
+                  </div>
                 )}
               </div>
             )}
@@ -473,60 +469,6 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
               </div>
             )}
 
-            {/* Additional Platform URLs (editable) */}
-            <div style={{ marginBottom: 24 }}>
-              <h3 style={sectionTitleStyle}>URLs Adicionais</h3>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#555", marginBottom: 4, textTransform: "uppercase" }}>TikTok URL</label>
-                  <input
-                    type="text"
-                    value={tiktokUrl}
-                    onChange={(e) => setTiktokUrl(e.target.value)}
-                    onBlur={() => {
-                      if (tiktokUrl !== (creator.tiktokUrl || "")) patchCreator({ tiktokUrl });
-                    }}
-                    placeholder="https://tiktok.com/@..."
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      background: "#141414",
-                      border: "1px solid rgba(255,255,255,0.04)",
-                      borderRadius: 8,
-                      color: "#f5f5f5",
-                      fontSize: 12,
-                      outline: "none",
-                      fontFamily: "inherit",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#555", marginBottom: 4, textTransform: "uppercase" }}>YouTube URL</label>
-                  <input
-                    type="text"
-                    value={youtubeUrl}
-                    onChange={(e) => setYoutubeUrl(e.target.value)}
-                    onBlur={() => {
-                      if (youtubeUrl !== (creator.youtubeUrl || "")) patchCreator({ youtubeUrl });
-                    }}
-                    placeholder="https://youtube.com/@..."
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      background: "#141414",
-                      border: "1px solid rgba(255,255,255,0.04)",
-                      borderRadius: 8,
-                      color: "#f5f5f5",
-                      fontSize: 12,
-                      outline: "none",
-                      fontFamily: "inherit",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
 
             {/* Products */}
             {creator.products && creator.products.length > 0 && (
