@@ -71,9 +71,12 @@ function buildDefaultSlides(creatorName, form, parsed) {
   const activeClients = Math.round(followers * 0.00675);
   const mrr = activeClients * wtp;
 
-  const conservativeMRR = Math.round(followers * 0.003 * wtp);
-  const moderateMRR = Math.round(followers * 0.00675 * wtp);
-  const aggressiveMRR = Math.round(followers * 0.02 * wtp);
+  const conClients = Math.round(followers * 0.003);
+  const modClients = Math.round(followers * 0.00675);
+  const aggClients = Math.round(followers * 0.02);
+  const conservativeMRR = conClients * wtp;
+  const moderateMRR = modClients * wtp;
+  const aggressiveMRR = aggClients * wtp;
 
   return [
     {
@@ -129,12 +132,24 @@ function buildDefaultSlides(creatorName, form, parsed) {
       title: "The Opportunity",
       fields: {
         heading: "O potencial de receita",
-        heroMRR: "\u20AC" + moderateMRR.toLocaleString("pt-PT") + "/mes",
+        heroMRR: "\u20AC" + moderateMRR.toLocaleString("pt-PT"),
+        heroLabel: "/mes",
         followers: followers.toLocaleString("pt-PT"),
-        activeClients: activeClients.toLocaleString("pt-PT"),
-        conservative: "\u20AC" + conservativeMRR.toLocaleString("pt-PT") + "/mes",
-        moderate: "\u20AC" + moderateMRR.toLocaleString("pt-PT") + "/mes",
-        aggressive: "\u20AC" + aggressiveMRR.toLocaleString("pt-PT") + "/mes",
+        conClients: conClients.toLocaleString("pt-PT"),
+        conPct: followers > 0 ? ((conClients / followers) * 100).toFixed(2) + "%" : "0.30%",
+        conMonthly: "\u20AC" + conservativeMRR.toLocaleString("pt-PT"),
+        conYear: "\u20AC" + (conservativeMRR * 12).toLocaleString("pt-PT"),
+        conLtv: "\u20AC" + (wtp > 0 ? Math.round(wtp / 0.10) : 0).toLocaleString("pt-PT"),
+        modClients: modClients.toLocaleString("pt-PT"),
+        modPct: followers > 0 ? ((modClients / followers) * 100).toFixed(2) + "%" : "0.67%",
+        modMonthly: "\u20AC" + moderateMRR.toLocaleString("pt-PT"),
+        modYear: "\u20AC" + (moderateMRR * 12).toLocaleString("pt-PT"),
+        modLtv: "\u20AC" + (wtp > 0 ? Math.round(wtp / 0.08) : 0).toLocaleString("pt-PT"),
+        aggClients: aggClients.toLocaleString("pt-PT"),
+        aggPct: followers > 0 ? ((aggClients / followers) * 100).toFixed(2) + "%" : "2.00%",
+        aggMonthly: "\u20AC" + aggressiveMRR.toLocaleString("pt-PT"),
+        aggYear: "\u20AC" + (aggressiveMRR * 12).toLocaleString("pt-PT"),
+        aggLtv: "\u20AC" + (wtp > 0 ? Math.round(wtp / 0.06) : 0).toLocaleString("pt-PT"),
         note: "Baseado em benchmarks reais do mercado",
       },
     },
@@ -395,30 +410,46 @@ function SlideOffer({ fields, onChange }) {
 }
 
 function SlideRevenue({ fields, onChange }) {
+  const row = (label, value, key, bold) => (
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+      <span style={{ fontSize: 12, color: colors.muted }}>{label}</span>
+      <Editable value={value} onChange={(v) => onChange(key, v)} style={{ fontSize: 13, fontWeight: bold ? 600 : 400, color: bold ? colors.primary : colors.secondary }} />
+    </div>
+  );
+
   return (
     <div style={slideInnerStyle}>
-      <Editable value={fields.heading} onChange={(v) => onChange("heading", v)} style={{ fontSize: 28, fontWeight: 700, color: colors.primary, display: "block", marginBottom: 32 }} tag="div" />
-      <div style={{ textAlign: "center", marginBottom: 32, padding: "28px 0", background: "rgba(122,14,24,0.06)", borderRadius: 12 }}>
+      <Editable value={fields.heading} onChange={(v) => onChange("heading", v)} style={{ fontSize: 28, fontWeight: 700, color: colors.primary, display: "block", marginBottom: 28 }} tag="div" />
+      {/* Hero MRR */}
+      <div style={{ textAlign: "center", marginBottom: 28, padding: "28px 0", background: "rgba(122,14,24,0.06)", borderRadius: 12 }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: colors.muted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Receita Mensal Estimada</div>
-        <Editable value={fields.heroMRR} onChange={(v) => onChange("heroMRR", v)} style={{ fontSize: 44, fontWeight: 300, color: colors.accent, letterSpacing: "-0.02em" }} tag="div" />
-        <div style={{ fontSize: 12, color: colors.muted, marginTop: 8 }}>
-          <Editable value={fields.followers} onChange={(v) => onChange("followers", v)} style={{ color: colors.secondary, fontSize: 12 }} /> seguidores {" -> "}
-          <Editable value={fields.activeClients} onChange={(v) => onChange("activeClients", v)} style={{ color: colors.secondary, fontSize: 12 }} /> clientes ativos
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center" }}>
+          <Editable value={fields.heroMRR} onChange={(v) => onChange("heroMRR", v)} style={{ fontSize: 44, fontWeight: 300, color: colors.accent, letterSpacing: "-0.02em" }} />
+          <span style={{ fontSize: 16, color: colors.muted, marginLeft: 4 }}>/mes</span>
+        </div>
+        <div style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}>
+          <Editable value={fields.modClients} onChange={(v) => onChange("modClients", v)} style={{ color: colors.secondary, fontSize: 12 }} /> clientes ativos &middot; <Editable value={fields.followers} onChange={(v) => onChange("followers", v)} style={{ color: colors.secondary, fontSize: 12 }} /> seguidores
         </div>
       </div>
+      {/* 3 scenario cards */}
       <div style={{ display: "flex", gap: 12 }}>
         {[
-          { label: "Conservador", key: "conservative", color: colors.muted },
-          { label: "Moderado", key: "moderate", color: colors.accent },
-          { label: "Agressivo", key: "aggressive", color: colors.primary },
+          { label: "Conservador", prefix: "con", color: colors.muted, border: "transparent" },
+          { label: "Moderado", prefix: "mod", color: colors.accent, border: colors.accent + "33" },
+          { label: "Agressivo", prefix: "agg", color: colors.accent, border: "transparent" },
         ].map((s) => (
-          <div key={s.key} style={{ flex: 1, background: "rgba(255,255,255,0.02)", borderRadius: 10, padding: "16px 20px", textAlign: "center", border: s.key === "moderate" ? `1px solid ${colors.accent}33` : "1px solid transparent" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: s.color, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>{s.label}</div>
-            <Editable value={fields[s.key]} onChange={(v) => onChange(s.key, v)} style={{ fontSize: 20, fontWeight: 600, color: colors.primary }} tag="div" />
+          <div key={s.prefix} style={{ flex: 1, background: "rgba(255,255,255,0.02)", borderRadius: 10, padding: "16px 18px", border: `1px solid ${s.border}` }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: s.color, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>{s.label}</div>
+            {row("Active clients", fields[s.prefix + "Clients"], s.prefix + "Clients", true)}
+            {row("% of followers", fields[s.prefix + "Pct"], s.prefix + "Pct", false)}
+            <div style={{ height: 8 }} />
+            {row("Monthly", fields[s.prefix + "Monthly"], s.prefix + "Monthly", true)}
+            {row("Year 1", fields[s.prefix + "Year"], s.prefix + "Year", true)}
+            {row("LTV/client", fields[s.prefix + "Ltv"], s.prefix + "Ltv", false)}
           </div>
         ))}
       </div>
-      <Editable value={fields.note} onChange={(v) => onChange("note", v)} style={{ fontSize: 11, color: colors.muted, display: "block", textAlign: "center", marginTop: 20, fontStyle: "italic" }} tag="div" />
+      <Editable value={fields.note} onChange={(v) => onChange("note", v)} style={{ fontSize: 11, color: colors.muted, display: "block", textAlign: "center", marginTop: 16, fontStyle: "italic" }} tag="div" />
     </div>
   );
 }
