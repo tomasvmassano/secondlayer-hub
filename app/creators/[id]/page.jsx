@@ -286,9 +286,10 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
                       const bioLinks = [];
                       if (creator.externalUrl) bioLinks.push(creator.externalUrl);
                       if (creator.bio) {
-                        const urlRegex = /https?:\/\/[^\s,)]+/gi;
+                        // Match URLs with and without protocol
+                        const urlRegex = /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s,)]*)?/gi;
                         const found = creator.bio.match(urlRegex) || [];
-                        found.forEach(u => { if (!bioLinks.includes(u)) bioLinks.push(u); });
+                        found.forEach(u => { if (!bioLinks.includes(u) && !bioLinks.some(b => b.includes(u) || u.includes(b))) bioLinks.push(u); });
                       }
                       if (bioLinks.length === 0) return null;
                       return (
