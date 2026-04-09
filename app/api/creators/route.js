@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { saveCreator, listCreators, searchCreators } from '../../lib/creators';
-import { scrapeCreator, apifyToCreatorProfile } from '../../lib/apify';
+import { scrapeCreator, apifyToCreatorProfile, scrapeMultiplePlatforms } from '../../lib/apify';
 
 // Allow up to 60 seconds for Apify scraping
 export const maxDuration = 60;
@@ -32,35 +32,61 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { url, name } = body;
-  if (!url) {
-    return NextResponse.json({ error: 'Missing "url" field' }, { status: 400 });
+  // Support both new format { instagramUrl, tiktokUrl, youtubeUrl, name } and old format { url, name }
+  let { instagramUrl, tiktokUrl, youtubeUrl, name, url } = body;
+
+  // Backward compat: if only `url` is sent (old format), detect platform
+  if (url && !instagramUrl && !tiktokUrl && !youtubeUrl) {
+    if (/instagram\.com/i.test(url)) instagramUrl = url;
+    else if (/tiktok\.com/i.test(url)) tiktokUrl = url;
+    else if (/youtube\.com|youtu\.be/i.test(url)) youtubeUrl = url;
+    else instagramUrl = url; // default to Instagram
+  }
+
+  if (!instagramUrl && !tiktokUrl && !youtubeUrl) {
+    return NextResponse.json({ error: 'At least one platform URL is required' }, { status: 400 });
   }
 
   try {
-    // Step 1: Try Apify for structured data (fast, cheap, accurate)
-    const apifyData = await scrapeCreator(url);
     let profile = null;
 
-    if (apifyData.source === 'apify' && !apifyData.error) {
-      profile = apifyToCreatorProfile(apifyData, url);
+    // Step 1: Try Apify multi-platform scraping
+    if (instagramUrl || tiktokUrl) {
+      const multiResult = await scrapeMultiplePlatforms(instagramUrl, tiktokUrl);
 
-      // Step 2: Use Claude to analyze the raw data (niche, products, reputation)
-      if (apiKey && profile) {
-        try {
-          const analysisResponse = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01',
-            },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-20250514',
-              max_tokens: 1500,
-              messages: [{
-                role: 'user',
-                content: `Analyze this creator's profile data and respond with ONLY these lines:
+      if (multiResult.source === 'apify' && multiResult.profile) {
+        profile = multiResult.profile;
+
+        // Store youtubeUrl in platforms if provided
+        if (youtubeUrl) {
+          profile.platforms.youtube = { url: youtubeUrl, subscribers: 0 };
+          profile.youtubeUrl = youtubeUrl;
+        }
+        if (tiktokUrl) profile.tiktokUrl = tiktokUrl;
+
+        // Step 2: Use Claude to analyze the raw data (niche, products, reputation)
+        if (apiKey && profile) {
+          try {
+            const igRaw = multiResult.igRaw;
+            const tkRaw = multiResult.tkRaw;
+            const recentContent = [
+              ...(igRaw?.recentPosts || []).slice(0, 3).map(p => p.caption),
+              ...(tkRaw?.recentVideos || []).slice(0, 3).map(v => v.caption),
+            ].filter(Boolean).join(' | ');
+
+            const analysisResponse = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
+              },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 1500,
+                messages: [{
+                  role: 'user',
+                  content: `Analyze this creator's profile data and respond with ONLY these lines:
 
 NICHE: [their niche, e.g. "Food / Baking", "Fitness", "Photography", "Business"]
 PRODUCTS: [comma-separated list of anything they sell: courses, workshops, ebooks, merch, or "None found"]
@@ -71,47 +97,52 @@ Name: ${profile.name}
 Bio: ${profile.bio || 'No bio'}
 External URL: ${profile.externalUrl || 'None'}
 Platform: ${profile.primaryPlatform}
-Followers: ${apifyData.followers || 0}
+Instagram Followers: ${igRaw?.followers || 0}
+TikTok Followers: ${tkRaw?.followers || 0}
 Engagement: ${profile.engagement || 'Unknown'}
 Is verified: ${profile.isVerified}
 Is business account: ${profile.isBusinessAccount}
-Recent posts: ${(apifyData.recentPosts || apifyData.recentVideos || []).slice(0, 5).map(p => p.caption).join(' | ')}`,
-              }],
-            }),
-          });
+Recent content: ${recentContent}`,
+                }],
+              }),
+            });
 
-          const analysisData = await analysisResponse.json();
-          if (analysisResponse.ok) {
-            const analysisText = (analysisData.content || [])
-              .filter(b => b.type === 'text')
-              .map(b => b.text)
-              .join('\n');
+            const analysisData = await analysisResponse.json();
+            if (analysisResponse.ok) {
+              const analysisText = (analysisData.content || [])
+                .filter(b => b.type === 'text')
+                .map(b => b.text)
+                .join('\n');
 
-            const getNiche = analysisText.match(/^NICHE:\s*(.+)/mi);
-            const getProducts = analysisText.match(/^PRODUCTS:\s*(.+)/mi);
-            const getReputation = analysisText.match(/^REPUTATION:\s*(.+)/mi);
+              const getNiche = analysisText.match(/^NICHE:\s*(.+)/mi);
+              const getProducts = analysisText.match(/^PRODUCTS:\s*(.+)/mi);
+              const getReputation = analysisText.match(/^REPUTATION:\s*(.+)/mi);
 
-            if (getNiche) profile.niche = getNiche[1].trim();
-            if (getProducts && getProducts[1].trim() !== 'None found') {
-              profile.products = getProducts[1].trim().split(',').map(p => p.trim()).filter(Boolean);
+              if (getNiche) profile.niche = getNiche[1].trim();
+              if (getProducts && getProducts[1].trim() !== 'None found') {
+                profile.products = getProducts[1].trim().split(',').map(p => p.trim()).filter(Boolean);
+              }
+              if (getReputation && getReputation[1].trim() !== 'No notable mentions') {
+                profile.reputation = getReputation[1].trim();
+              }
             }
-            if (getReputation && getReputation[1].trim() !== 'No notable mentions') {
-              profile.reputation = getReputation[1].trim();
-            }
+          } catch {
+            // Analysis failed, we still have the raw Apify data
           }
-        } catch {
-          // Analysis failed, we still have the raw Apify data
         }
       }
-    } else {
-      // Apify not available or failed — fallback to Claude web search
+    }
+
+    // Fallback: if Apify didn't work or only YouTube was provided, use Claude web search
+    if (!profile) {
       if (!apiKey) {
         return NextResponse.json({ error: 'Neither APIFY_TOKEN nor ANTHROPIC_API_KEY configured' }, { status: 500 });
       }
 
-      const usernameMatch = url.match(/(?:instagram\.com|tiktok\.com)\/[@]?([^/?]+)/i);
+      const primaryUrl = instagramUrl || tiktokUrl || youtubeUrl;
+      const usernameMatch = primaryUrl.match(/(?:instagram\.com|tiktok\.com|youtube\.com)\/[@]?([^/?]+)/i);
       const username = usernameMatch ? usernameMatch[1] : '';
-      const platform = url.includes('tiktok') ? 'TikTok' : url.includes('youtube') ? 'YouTube' : 'Instagram';
+      const platform = primaryUrl.includes('tiktok') ? 'TikTok' : primaryUrl.includes('youtube') ? 'YouTube' : 'Instagram';
 
       const researchResponse = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -126,7 +157,7 @@ Recent posts: ${(apifyData.recentPosts || apifyData.recentVideos || []).slice(0,
           tools: [{ type: 'web_search_20250305', name: 'web_search' }],
           messages: [{
             role: 'user',
-            content: `Search for this ${platform} creator: ${url}
+            content: `Search for this ${platform} creator: ${primaryUrl}
 ${name ? `Name: ${name}` : `Username: ${username}`}
 
 Search for "${username} ${platform}" and "${username} followers".
@@ -137,12 +168,12 @@ NAME: ${name || '[full name]'}
 NICHE: [e.g. Food / Baking, Fitness, Photography]
 PRIMARY_PLATFORM: ${platform}
 INSTAGRAM_FOLLOWERS: [number, e.g. 181000]
-INSTAGRAM_URL: ${platform === 'Instagram' ? url : ''}
+INSTAGRAM_URL: ${instagramUrl || ''}
 TIKTOK_FOLLOWERS: [number]
 TIKTOK_LIKES: [number]
-TIKTOK_URL: ${platform === 'TikTok' ? url : ''}
+TIKTOK_URL: ${tiktokUrl || ''}
 YOUTUBE_SUBSCRIBERS: [number]
-YOUTUBE_URL: ${platform === 'YouTube' ? url : ''}
+YOUTUBE_URL: ${youtubeUrl || ''}
 ENGAGEMENT: [e.g. 3.5%]
 PRODUCTS: [comma-separated, or "None found"]
 REPUTATION: [brief summary, or "No notable mentions"]
@@ -161,10 +192,12 @@ RESEARCH: [2-3 paragraph summary]`,
         .map(b => b.text)
         .join('\n\n');
 
-      profile = parseClaudeResearch(researchText, name, username, url, platform);
+      profile = parseClaudeResearch(researchText, name, username, primaryUrl, platform);
     }
 
     if (name && profile) profile.name = name;
+    if (tiktokUrl && profile) profile.tiktokUrl = tiktokUrl;
+    if (youtubeUrl && profile) profile.youtubeUrl = youtubeUrl;
 
     const { id } = await saveCreator(profile);
     return NextResponse.json({ id, creator: { id, ...profile } });

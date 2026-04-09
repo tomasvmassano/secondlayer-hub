@@ -194,6 +194,93 @@ export async function scrapeCreator(url) {
 }
 
 /**
+ * Scrape multiple platforms in parallel and merge into one profile.
+ * Returns a merged creator profile object (not raw scrape data).
+ */
+export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl) {
+  if (!hasApify()) return { error: 'APIFY_TOKEN not configured', source: 'none' };
+
+  const tasks = [];
+
+  if (instagramUrl) {
+    const match = instagramUrl.match(/instagram\.com\/([^/?]+)/i);
+    const username = match ? match[1].replace(/^@/, '') : '';
+    if (username) tasks.push(scrapeInstagram(username).then(d => ({ platform: 'instagram', data: d, url: instagramUrl })).catch(() => ({ platform: 'instagram', data: null, url: instagramUrl })));
+  }
+
+  if (tiktokUrl) {
+    const match = tiktokUrl.match(/tiktok\.com\/@?([^/?]+)/i);
+    const username = match ? match[1].replace(/^@/, '') : '';
+    if (username) tasks.push(scrapeTikTok(username).then(d => ({ platform: 'tiktok', data: d, url: tiktokUrl })).catch(() => ({ platform: 'tiktok', data: null, url: tiktokUrl })));
+  }
+
+  if (tasks.length === 0) return { error: 'No valid URLs provided', source: 'none' };
+
+  const results = await Promise.all(tasks);
+
+  // Build merged profile
+  const igResult = results.find(r => r.platform === 'instagram');
+  const tkResult = results.find(r => r.platform === 'tiktok');
+  const igData = igResult?.data;
+  const tkData = tkResult?.data;
+
+  // Pick name/bio from whichever platform returned data (prefer Instagram)
+  const name = igData?.name || tkData?.name || 'Unknown';
+  const bio = igData?.bio || tkData?.bio || '';
+  const profilePicUrl = igData?.profilePicUrl || tkData?.profilePicUrl || '';
+
+  const profile = {
+    name,
+    niche: '',
+    primaryPlatform: igData ? 'Instagram' : 'TikTok',
+    engagement: igData?.engagementRate || '',
+    bio,
+    externalUrl: igData?.externalUrl || '',
+    isVerified: igData?.isVerified || tkData?.isVerified || false,
+    isBusinessAccount: igData?.isBusinessAccount || false,
+    profilePicUrl,
+    platforms: {},
+    products: [],
+    reputation: '',
+    research: '',
+  };
+
+  if (igData) {
+    profile.platforms.instagram = {
+      followers: igData.followers || 0,
+      following: igData.following || 0,
+      postCount: igData.postCount || 0,
+      avgLikes: igData.avgLikes || 0,
+      avgComments: igData.avgComments || 0,
+      followerFollowingRatio: igData.followerFollowingRatio || '0',
+      engagementRate: igData.engagementRate || '',
+      url: instagramUrl,
+      recentPosts: igData.recentPosts || [],
+    };
+  }
+
+  if (tkData) {
+    profile.platforms.tiktok = {
+      followers: tkData.followers || 0,
+      following: tkData.following || 0,
+      totalLikes: tkData.totalLikes || 0,
+      videoCount: tkData.videoCount || 0,
+      avgViews: tkData.avgViews || 0,
+      url: tiktokUrl,
+      recentVideos: tkData.recentVideos || [],
+    };
+  }
+
+  // Return both profile and raw data for Claude analysis
+  return {
+    source: 'apify',
+    profile,
+    igRaw: igData,
+    tkRaw: tkData,
+  };
+}
+
+/**
  * Convert Apify scrape data into our creator profile format
  */
 export function apifyToCreatorProfile(scrapeData, url) {

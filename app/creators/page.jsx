@@ -16,7 +16,9 @@ export default function CreatorsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [addUrl, setAddUrl] = useState("");
+  const [addInstagramUrl, setAddInstagramUrl] = useState("");
+  const [addTiktokUrl, setAddTiktokUrl] = useState("");
+  const [addYoutubeUrl, setAddYoutubeUrl] = useState("");
   const [addName, setAddName] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
@@ -46,18 +48,25 @@ export default function CreatorsPage() {
   }, [search, fetchCreators]);
 
   const handleAdd = async () => {
-    if (!addUrl.trim()) return;
+    if (!addInstagramUrl.trim() && !addTiktokUrl.trim() && !addYoutubeUrl.trim()) return;
     setAdding(true);
     setAddError("");
     try {
       const res = await fetch("/api/creators", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: addUrl.trim(), name: addName.trim() || undefined }),
+        body: JSON.stringify({
+          instagramUrl: addInstagramUrl.trim() || undefined,
+          tiktokUrl: addTiktokUrl.trim() || undefined,
+          youtubeUrl: addYoutubeUrl.trim() || undefined,
+          name: addName.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao adicionar");
-      setAddUrl("");
+      setAddInstagramUrl("");
+      setAddTiktokUrl("");
+      setAddYoutubeUrl("");
       setAddName("");
       setShowAdd(false);
       fetchCreators(search);
@@ -145,46 +154,84 @@ export default function CreatorsPage() {
             marginBottom: 24,
           }}>
             <h3 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 16px" }}>Adicionar Novo Creator</h3>
-            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-              <input
-                type="text"
-                placeholder="URL do perfil (Instagram, TikTok, YouTube...)"
-                value={addUrl}
-                onChange={(e) => setAddUrl(e.target.value)}
-                style={{
-                  flex: 2,
-                  padding: "12px 14px",
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: 8,
-                  color: "#f5f5f5",
-                  fontSize: 13,
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Nome (opcional)"
-                value={addName}
-                onChange={(e) => setAddName(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: "12px 14px",
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: 8,
-                  color: "#f5f5f5",
-                  fontSize: 13,
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-              />
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
+              <div style={{ display: "flex", gap: 12 }}>
+                <input
+                  type="text"
+                  placeholder="https://instagram.com/username"
+                  value={addInstagramUrl}
+                  onChange={(e) => setAddInstagramUrl(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "12px 14px",
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 8,
+                    color: "#f5f5f5",
+                    fontSize: 13,
+                    outline: "none",
+                    fontFamily: "inherit",
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Nome (opcional)"
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "12px 14px",
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 8,
+                    color: "#f5f5f5",
+                    fontSize: 13,
+                    outline: "none",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: 12 }}>
+                <input
+                  type="text"
+                  placeholder="https://tiktok.com/@username (opcional)"
+                  value={addTiktokUrl}
+                  onChange={(e) => setAddTiktokUrl(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "12px 14px",
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 8,
+                    color: "#f5f5f5",
+                    fontSize: 13,
+                    outline: "none",
+                    fontFamily: "inherit",
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="https://youtube.com/@channel (opcional)"
+                  value={addYoutubeUrl}
+                  onChange={(e) => setAddYoutubeUrl(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "12px 14px",
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 8,
+                    color: "#f5f5f5",
+                    fontSize: 13,
+                    outline: "none",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <button
                 onClick={handleAdd}
-                disabled={adding || !addUrl.trim()}
+                disabled={adding || (!addInstagramUrl.trim() && !addTiktokUrl.trim() && !addYoutubeUrl.trim())}
                 style={{
                   padding: "10px 20px",
                   background: adding ? "#333" : "#7A0E18",
