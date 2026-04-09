@@ -36,8 +36,12 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Missing "url" field' }, { status: 400 });
   }
 
+  // Extract username from URL for better searching
+  const usernameMatch = url.match(/(?:instagram\.com|tiktok\.com)\/[@]?([^/?]+)/i);
+  const username = usernameMatch ? usernameMatch[1] : '';
+  const platform = url.includes('tiktok') ? 'TikTok' : url.includes('youtube') ? 'YouTube' : 'Instagram';
+
   try {
-    // Scrape creator info using Anthropic with web search
     const researchResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -51,33 +55,27 @@ export async function POST(request) {
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: `Research this creator: ${url}
-${name ? `Their name is ${name}.` : ''}
+          content: `Search for this ${platform} creator: ${url}
+${name ? `Name: ${name}` : `Username: ${username}`}
 
-Do multiple searches to find:
-1. Their name and bio
-2. Exact follower counts on Instagram, TikTok, YouTube
-3. What they sell (courses, workshops, products, ebooks)
-4. Their niche/category
-5. Engagement rate
-6. Reputation (TV, press, awards, books)
+Search for "${username} ${platform}" and "${username} followers" to find their profile data.
 
-After your research, output EXACTLY in this format (fill in what you find, leave empty if unknown):
+After researching, you MUST respond with ONLY these lines, filled with what you found. Use 0 for unknown numbers. Do NOT skip any line:
 
-NAME: [full name]
-NICHE: [their niche, e.g. "Food / Baking", "Fitness", "Photography"]
-PRIMARY_PLATFORM: [Instagram or TikTok or YouTube]
-INSTAGRAM_FOLLOWERS: [number only, e.g. 181000]
-INSTAGRAM_URL: [url]
-TIKTOK_FOLLOWERS: [number only]
-TIKTOK_LIKES: [number only]
-TIKTOK_URL: [url]
-YOUTUBE_SUBSCRIBERS: [number only]
-YOUTUBE_URL: [url]
-ENGAGEMENT: [percentage, e.g. 3.5%]
-PRODUCTS: [comma-separated list]
-REPUTATION: [brief summary of press, TV, awards]
-RESEARCH: [full research text with all details found]`,
+NAME: ${name || '[their full name]'}
+NICHE: [e.g. Food / Baking, Fitness, Photography]
+PRIMARY_PLATFORM: ${platform}
+INSTAGRAM_FOLLOWERS: [number, e.g. 181000]
+INSTAGRAM_URL: ${platform === 'Instagram' ? url : '[url or empty]'}
+TIKTOK_FOLLOWERS: [number]
+TIKTOK_LIKES: [number]
+TIKTOK_URL: ${platform === 'TikTok' ? url : '[url or empty]'}
+YOUTUBE_SUBSCRIBERS: [number]
+YOUTUBE_URL: ${platform === 'YouTube' ? url : '[url or empty]'}
+ENGAGEMENT: [e.g. 3.5%]
+PRODUCTS: [comma-separated: workshops, courses, ebooks, etc. or "None found"]
+REPUTATION: [TV, press, awards, books, or "No notable mentions found"]
+RESEARCH: [2-3 paragraph summary of everything you found about this creator]`,
         }],
       }),
     });
@@ -92,10 +90,9 @@ RESEARCH: [full research text with all details found]`,
       .map(b => b.text)
       .join('\n\n');
 
-    // Parse structured data from research
-    const parsed = _parseResearch(researchText, name);
+    // Parse structured data
+    const parsed = parseResearch(researchText, name, username, url, platform);
 
-    // Save to database
     const { id } = await saveCreator(parsed);
 
     return NextResponse.json({ id, creator: { id, ...parsed } });
@@ -104,50 +101,63 @@ RESEARCH: [full research text with all details found]`,
   }
 }
 
-function _parseResearch(text, fallbackName) {
+function parseResearch(text, fallbackName, username, url, platform) {
   const get = (key) => {
-    const match = text.match(new RegExp(`${key}:\\s*(.+)`, 'i'));
-    return match ? match[1].trim() : '';
+    const match = text.match(new RegExp(`^${key}:\\s*(.+)`, 'mi'));
+    return match ? match[1].trim().replace(/^\[.*\]$/, '') : '';
   };
 
   const getNum = (key) => {
     const val = get(key);
-    if (!val) return 0;
-    const num = parseInt(val.replace(/[,.\s]/g, ''), 10);
+    if (!val || val === '0') return 0;
+    // Handle formats like "181,000" or "181000" or "181K" or "2.6M"
+    let cleaned = val.replace(/[,\s]/g, '');
+    if (/(\d+(?:\.\d+)?)\s*[kK]/.test(cleaned)) {
+      return Math.round(parseFloat(RegExp.$1) * 1000);
+    }
+    if (/(\d+(?:\.\d+)?)\s*[mM]/.test(cleaned)) {
+      return Math.round(parseFloat(RegExp.$1) * 1000000);
+    }
+    const num = parseInt(cleaned, 10);
     return isNaN(num) ? 0 : num;
   };
 
-  const name = get('NAME') || fallbackName || 'Unknown';
-  const niche = get('NICHE');
-  const primaryPlatform = get('PRIMARY_PLATFORM') || 'Instagram';
-  const engagement = get('ENGAGEMENT');
+  const name = get('NAME') || fallbackName || username || 'Unknown';
+  const niche = get('NICHE') || '';
+  const primaryPlatform = get('PRIMARY_PLATFORM') || platform || 'Instagram';
+  const engagement = get('ENGAGEMENT') || '';
   const productsRaw = get('PRODUCTS');
-  const products = productsRaw ? productsRaw.split(',').map(p => p.trim()).filter(Boolean) : [];
-  const reputation = get('REPUTATION');
+  const products = productsRaw && productsRaw !== 'None found'
+    ? productsRaw.split(',').map(p => p.trim()).filter(Boolean)
+    : [];
+  const reputation = get('REPUTATION') || '';
 
-  // Extract research block (everything after RESEARCH:)
-  const researchMatch = text.match(/RESEARCH:\s*([\s\S]+)/i);
+  const researchMatch = text.match(/^RESEARCH:\s*([\s\S]+)/mi);
   const research = researchMatch ? researchMatch[1].trim() : text;
 
   const platforms = {};
 
-  const igFollowers = getNum('INSTAGRAM_FOLLOWERS');
-  const igUrl = get('INSTAGRAM_URL');
-  if (igFollowers || igUrl) {
-    platforms.instagram = { followers: igFollowers, url: igUrl };
+  // Always set the platform from the URL
+  if (platform === 'Instagram' || get('INSTAGRAM_URL') || getNum('INSTAGRAM_FOLLOWERS')) {
+    platforms.instagram = {
+      followers: getNum('INSTAGRAM_FOLLOWERS'),
+      url: get('INSTAGRAM_URL') || (platform === 'Instagram' ? url : ''),
+    };
   }
 
-  const ttFollowers = getNum('TIKTOK_FOLLOWERS');
-  const ttLikes = getNum('TIKTOK_LIKES');
-  const ttUrl = get('TIKTOK_URL');
-  if (ttFollowers || ttUrl) {
-    platforms.tiktok = { followers: ttFollowers, likes: ttLikes, url: ttUrl };
+  if (platform === 'TikTok' || get('TIKTOK_URL') || getNum('TIKTOK_FOLLOWERS')) {
+    platforms.tiktok = {
+      followers: getNum('TIKTOK_FOLLOWERS'),
+      likes: getNum('TIKTOK_LIKES'),
+      url: get('TIKTOK_URL') || (platform === 'TikTok' ? url : ''),
+    };
   }
 
-  const ytSubs = getNum('YOUTUBE_SUBSCRIBERS');
-  const ytUrl = get('YOUTUBE_URL');
-  if (ytSubs || ytUrl) {
-    platforms.youtube = { subscribers: ytSubs, url: ytUrl };
+  if (platform === 'YouTube' || get('YOUTUBE_URL') || getNum('YOUTUBE_SUBSCRIBERS')) {
+    platforms.youtube = {
+      subscribers: getNum('YOUTUBE_SUBSCRIBERS'),
+      url: get('YOUTUBE_URL') || (platform === 'YouTube' ? url : ''),
+    };
   }
 
   return {
