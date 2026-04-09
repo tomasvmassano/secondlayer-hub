@@ -263,22 +263,6 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
               </div>
             </div>
 
-            {/* Bio section */}
-            {(creator.bio || creator.externalUrl) && (
-              <div style={{ marginBottom: 24, padding: "16px 18px", background: "#141414", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 12 }}>
-                <h3 style={{ fontSize: 10, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>Bio</h3>
-                {creator.bio && <p style={{ fontSize: 13, color: "#ccc", margin: "0 0 10px", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{creator.bio}</p>}
-                {creator.externalUrl && (
-                  <div style={{ paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.06em" }}>Link in Bio</span>
-                    <a href={creator.externalUrl.startsWith("http") ? creator.externalUrl : "https://" + creator.externalUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#7A0E18", textDecoration: "none", display: "block", marginTop: 4 }}>
-                      {creator.externalUrl}
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* ===== INSTAGRAM SECTION ===== */}
             {igData && (
               <div style={{ marginBottom: 28 }}>
@@ -290,6 +274,38 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
                     </a>
                   )}
                 </h3>
+
+                {/* Instagram Bio */}
+                {(creator.bio || creator.externalUrl) && (
+                  <div style={{ marginBottom: 14, padding: "14px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 10 }}>
+                    {creator.bio && (
+                      <p style={{ fontSize: 13, color: "#bbb", margin: 0, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{creator.bio}</p>
+                    )}
+                    {(() => {
+                      // Extract all URLs from bio text + externalUrl
+                      const bioLinks = [];
+                      if (creator.externalUrl) bioLinks.push(creator.externalUrl);
+                      if (creator.bio) {
+                        const urlRegex = /https?:\/\/[^\s,)]+/gi;
+                        const found = creator.bio.match(urlRegex) || [];
+                        found.forEach(u => { if (!bioLinks.includes(u)) bioLinks.push(u); });
+                      }
+                      if (bioLinks.length === 0) return null;
+                      return (
+                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                          <div style={{ fontSize: 10, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Links na Bio</div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            {bioLinks.map((link, i) => (
+                              <a key={i} href={link.startsWith("http") ? link : "https://" + link} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#7A0E18", textDecoration: "none", wordBreak: "break-all" }}>
+                                {link}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8, marginBottom: 12 }}>
                   {igData.followers > 0 && (
                     <div style={metricCardStyle}>
