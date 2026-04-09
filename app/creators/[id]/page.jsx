@@ -155,7 +155,7 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
   if (igData.avgComments) metrics.push({ label: "M\u00e9dia Coment\u00e1rios/Post", value: formatFollowers(igData.avgComments) });
   if (tkData.avgViews) metrics.push({ label: "M\u00e9dia Views", value: formatFollowers(tkData.avgViews) });
   if (tkData.totalLikes) metrics.push({ label: "Total Likes (TK)", value: formatFollowers(tkData.totalLikes) });
-  if (primaryData.followerFollowingRatio) metrics.push({ label: "Ratio Foll/Foll", value: primaryData.followerFollowingRatio.toFixed(2) });
+  if (primaryData.followerFollowingRatio) metrics.push({ label: "Ratio Foll/Foll", value: typeof primaryData.followerFollowingRatio === 'number' ? primaryData.followerFollowingRatio.toFixed(1) : String(primaryData.followerFollowingRatio) });
   if (creator.engagement) metrics.push({ label: "Engagement", value: creator.engagement });
   metrics.push({ label: "Verificado", value: creator.isVerified ? "Sim" : "N\u00e3o", isBadge: true, positive: !!creator.isVerified });
   metrics.push({ label: "Conta Business", value: creator.isBusinessAccount ? "Sim" : "N\u00e3o", isBadge: true, positive: !!creator.isBusinessAccount });
