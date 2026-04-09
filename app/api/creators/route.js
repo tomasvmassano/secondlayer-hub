@@ -51,8 +51,8 @@ export async function POST(request) {
     let profile = null;
 
     // Step 1: Try Apify multi-platform scraping
-    if (instagramUrl || tiktokUrl) {
-      const multiResult = await scrapeMultiplePlatforms(instagramUrl, tiktokUrl);
+    if (instagramUrl || tiktokUrl || youtubeUrl) {
+      const multiResult = await scrapeMultiplePlatforms(instagramUrl, tiktokUrl, youtubeUrl);
 
       if (multiResult.source === 'apify' && multiResult.profile) {
         profile = multiResult.profile;

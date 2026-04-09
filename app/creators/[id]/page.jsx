@@ -458,14 +458,42 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
                     </a>
                   )}
                 </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8, marginBottom: 12 }}>
                   {ytData.subscribers > 0 && (
                     <div style={metricCardStyle}>
                       <div style={metricLabelStyle}>Subscribers</div>
                       <div style={metricValueStyle}>{formatFollowers(ytData.subscribers)}</div>
                     </div>
                   )}
+                  {ytData.videoCount > 0 && (
+                    <div style={metricCardStyle}>
+                      <div style={metricLabelStyle}>Total Videos</div>
+                      <div style={metricValueStyle}>{formatFollowers(ytData.videoCount)}</div>
+                    </div>
+                  )}
                 </div>
+                {ytData.recentVideos && ytData.recentVideos.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Vídeos Recentes</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {ytData.recentVideos.slice(0, 3).map((vid, i) => (
+                        <div key={i} style={{ padding: "10px 14px", background: "#141414", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: "#ccc", marginBottom: 4, lineHeight: 1.4 }}>
+                            {vid.url ? (
+                              <a href={vid.url} target="_blank" rel="noopener noreferrer" style={{ color: "#ccc", textDecoration: "none" }}>{vid.title}</a>
+                            ) : vid.title}
+                          </div>
+                          <div style={{ display: "flex", gap: 12 }}>
+                            <span style={{ fontSize: 11, color: "#888" }}>{formatFollowers(vid.views || 0)} views</span>
+                            <span style={{ fontSize: 11, color: "#888" }}>{formatFollowers(vid.likes || 0)} likes</span>
+                            <span style={{ fontSize: 11, color: "#666" }}>{formatFollowers(vid.comments || 0)} comments</span>
+                            {vid.date && <span style={{ fontSize: 11, color: "#444" }}>{vid.date}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

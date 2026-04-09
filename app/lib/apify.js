@@ -144,6 +144,42 @@ async function scrapeTikTok(username) {
 }
 
 /**
+ * Scrape YouTube channel via Apify
+ * Returns structured channel data with recent videos
+ */
+async function scrapeYouTube(channelUrl) {
+  const items = await runApifyActor('streamers~youtube-channel-scraper', {
+    startUrls: [{ url: channelUrl }],
+    maxResults: 3,
+    maxResultsShorts: 0,
+    maxResultStreams: 0,
+  });
+
+  if (!items || items.length === 0) return null;
+
+  // Extract channel info from first video
+  const first = items[0];
+  const subscribers = first.channelSubscribers || 0;
+  const channelName = first.channelName || '';
+
+  return {
+    name: channelName,
+    subscribers,
+    videoCount: first.channelVideoCount || 0,
+    channelUrl: first.channelUrl || channelUrl,
+    recentVideos: items.map(v => ({
+      title: (v.title || '').slice(0, 150),
+      views: v.viewCount || 0,
+      likes: v.likes || 0,
+      comments: v.commentsCount || 0,
+      date: v.date || '',
+      url: v.url || '',
+      duration: v.duration || '',
+    })),
+  };
+}
+
+/**
  * Main scrape function — detects platform from URL and scrapes accordingly
  */
 export async function scrapeCreator(url) {
@@ -197,7 +233,7 @@ export async function scrapeCreator(url) {
  * Scrape multiple platforms in parallel and merge into one profile.
  * Returns a merged creator profile object (not raw scrape data).
  */
-export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl) {
+export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl, youtubeUrl) {
   if (!hasApify()) return { error: 'APIFY_TOKEN not configured', source: 'none' };
 
   const tasks = [];
@@ -214,6 +250,10 @@ export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl) {
     if (username) tasks.push(scrapeTikTok(username).then(d => ({ platform: 'tiktok', data: d, url: tiktokUrl })).catch(() => ({ platform: 'tiktok', data: null, url: tiktokUrl })));
   }
 
+  if (youtubeUrl) {
+    tasks.push(scrapeYouTube(youtubeUrl).then(d => ({ platform: 'youtube', data: d, url: youtubeUrl })).catch(() => ({ platform: 'youtube', data: null, url: youtubeUrl })));
+  }
+
   if (tasks.length === 0) return { error: 'No valid URLs provided', source: 'none' };
 
   const results = await Promise.all(tasks);
@@ -221,11 +261,13 @@ export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl) {
   // Build merged profile
   const igResult = results.find(r => r.platform === 'instagram');
   const tkResult = results.find(r => r.platform === 'tiktok');
+  const ytResult = results.find(r => r.platform === 'youtube');
   const igData = igResult?.data;
   const tkData = tkResult?.data;
+  const ytData = ytResult?.data;
 
   // Pick name/bio from whichever platform returned data (prefer Instagram)
-  const name = igData?.name || tkData?.name || 'Unknown';
+  const name = igData?.name || tkData?.name || ytData?.name || 'Unknown';
   const bio = igData?.bio || tkData?.bio || '';
   const profilePicUrl = igData?.profilePicUrl || tkData?.profilePicUrl || '';
 
@@ -271,12 +313,22 @@ export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl) {
     };
   }
 
+  if (ytData) {
+    profile.platforms.youtube = {
+      subscribers: ytData.subscribers || 0,
+      videoCount: ytData.videoCount || 0,
+      url: ytData.channelUrl || youtubeUrl,
+      recentVideos: ytData.recentVideos || [],
+    };
+  }
+
   // Return both profile and raw data for Claude analysis
   return {
     source: 'apify',
     profile,
     igRaw: igData,
     tkRaw: tkData,
+    ytRaw: ytData,
   };
 }
 
