@@ -78,15 +78,15 @@ async function scrapeInstagram(username) {
   const engagementRate = followers > 0 ? (((avgLikes + avgComments) / followers) * 100).toFixed(2) + '%' : '0%';
 
   return {
-    name: p.fullName || p.username || username,
-    bio: p.biography || '',
+    name: p.fullName || p.name || p.username || username,
+    bio: p.biography || p.bio || p.description || p.aboutInfo?.biography || '',
     followers,
-    following: p.followsCount || 0,
-    postCount: p.postsCount || 0,
-    isVerified: p.verified || false,
-    isBusinessAccount: p.isBusinessAccount || false,
-    externalUrl: p.externalUrl || '',
-    profilePicUrl: p.profilePicUrlHD || p.profilePicUrl || '',
+    following: p.followsCount || p.followingCount || 0,
+    postCount: p.postsCount || p.mediaCount || 0,
+    isVerified: p.verified || p.isVerified || false,
+    isBusinessAccount: p.isBusinessAccount || p.isBusiness || false,
+    externalUrl: p.externalUrl || p.externalUrlShimmed || p.website || p.url || '',
+    profilePicUrl: p.profilePicUrlHD || p.profilePicUrl || p.profilePic || '',
     engagementRate,
     avgLikes,
     avgComments,
@@ -98,6 +98,14 @@ async function scrapeInstagram(username) {
       timestamp: post.timestamp || '',
       type: post.type || 'image',
     })),
+    // Debug: store raw field names + bio-related fields for troubleshooting
+    _debug: {
+      fieldNames: Object.keys(p).filter(k => k !== 'latestPosts'),
+      biographyField: p.biography,
+      bioField: p.bio,
+      descField: p.description,
+      extUrlField: p.externalUrl,
+    },
   };
 }
 
@@ -285,6 +293,7 @@ export async function scrapeMultiplePlatforms(instagramUrl, tiktokUrl, youtubeUr
     products: [],
     reputation: '',
     research: '',
+    _apifyDebug: igData?._debug || null,
   };
 
   if (igData) {

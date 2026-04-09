@@ -584,6 +584,16 @@ export default function CreatorProfilePage({ params: paramsPromise }) {
               </div>
             )}
 
+            {/* Debug: Apify raw fields */}
+            {creator._apifyDebug && (
+              <div style={{ marginBottom: 24, padding: 16, background: "#1a0a0a", border: "1px solid #7A0E1833", borderRadius: 10 }}>
+                <h3 style={{ fontSize: 10, fontWeight: 600, color: "#7A0E18", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 8px" }}>Debug: Apify Raw Fields</h3>
+                <pre style={{ fontSize: 11, color: "#888", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+                  {JSON.stringify(creator._apifyDebug, null, 2)}
+                </pre>
+              </div>
+            )}
+
             {/* Notes */}
             <div style={{ marginBottom: 24 }}>
               <h3 style={sectionTitleStyle}>Notas</h3>
