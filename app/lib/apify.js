@@ -44,52 +44,50 @@ async function runApifyActor(actorId, input) {
  * Returns structured creator data
  */
 async function scrapeInstagram(username) {
-  const items = await runApifyActor('apify~instagram-profile-scraper', {
-    usernames: [username],
+  // Use apify/instagram-scraper with resultsType "details" to get full profile including bio
+  const items = await runApifyActor('apify~instagram-scraper', {
+    directUrls: [`https://www.instagram.com/${username}/`],
+    resultsType: 'details',
+    resultsLimit: 1,
   });
 
   if (!items || items.length === 0) return null;
   const p = items[0];
 
   // Calculate engagement from recent posts
-  const posts = p.latestPosts || [];
+  const posts = p.latestPosts || p.recentPosts || [];
   let avgLikes = 0, avgComments = 0;
   if (posts.length > 0) {
-    avgLikes = Math.round(posts.reduce((s, post) => s + (post.likesCount || 0), 0) / posts.length);
-    avgComments = Math.round(posts.reduce((s, post) => s + (post.commentsCount || 0), 0) / posts.length);
+    avgLikes = Math.round(posts.reduce((s, post) => s + (post.likesCount || post.likes || 0), 0) / posts.length);
+    avgComments = Math.round(posts.reduce((s, post) => s + (post.commentsCount || post.comments || 0), 0) / posts.length);
   }
-  const followers = p.followersCount || 0;
+  const followers = p.followersCount || p.followers || 0;
+  const following = p.followsCount || p.followingCount || p.following || 0;
   const engagementRate = followers > 0 ? (((avgLikes + avgComments) / followers) * 100).toFixed(2) + '%' : '0%';
 
   return {
     name: p.fullName || p.name || p.username || username,
-    bio: p.biography || p.bio || p.description || p.aboutInfo?.biography || '',
+    bio: p.biography || p.bio || p.description || '',
     followers,
-    following: p.followsCount || p.followingCount || 0,
-    postCount: p.postsCount || p.mediaCount || 0,
+    following,
+    postCount: p.postsCount || p.mediaCount || p.postCount || 0,
     isVerified: p.verified || p.isVerified || false,
     isBusinessAccount: p.isBusinessAccount || p.isBusiness || false,
-    externalUrl: p.externalUrl || p.externalUrlShimmed || p.website || p.url || '',
+    externalUrl: p.externalUrl || p.externalUrlShimmed || p.website || '',
     profilePicUrl: p.profilePicUrlHD || p.profilePicUrl || p.profilePic || '',
     engagementRate,
     avgLikes,
     avgComments,
-    followerFollowingRatio: p.followsCount > 0 ? (followers / p.followsCount).toFixed(1) : '0',
+    followerFollowingRatio: following > 0 ? (followers / following).toFixed(1) : '0',
     recentPosts: posts.slice(0, 12).map(post => ({
       caption: (post.caption || '').slice(0, 200),
-      likes: post.likesCount || 0,
-      comments: post.commentsCount || 0,
+      likes: post.likesCount || post.likes || 0,
+      comments: post.commentsCount || post.comments || 0,
       timestamp: post.timestamp || '',
       type: post.type || 'image',
     })),
-    // Debug: store raw field names + bio-related fields for troubleshooting
-    _debug: {
-      fieldNames: Object.keys(p).filter(k => k !== 'latestPosts'),
-      biographyField: p.biography,
-      bioField: p.bio,
-      descField: p.description,
-      extUrlField: p.externalUrl,
-    },
+    // Debug: raw field names for troubleshooting
+    _debug: Object.keys(p).filter(k => !['latestPosts', 'recentPosts'].includes(k)),
   };
 }
 
