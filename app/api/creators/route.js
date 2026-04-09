@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { saveCreator, listCreators, searchCreators } from '../../lib/creators';
 import { scrapeCreator, apifyToCreatorProfile } from '../../lib/apify';
 
+// Allow up to 60 seconds for Apify scraping
+export const maxDuration = 60;
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
