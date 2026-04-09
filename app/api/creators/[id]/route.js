@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCreator, updateCreator } from '../../../lib/creators';
+import { getCreator, updateCreator, deleteCreator } from '../../../lib/creators';
 
 export async function GET(request, { params }) {
   try {
@@ -29,6 +29,19 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
     }
     return NextResponse.json(updated);
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const { id } = await params;
+    const deleted = await deleteCreator(id);
+    if (!deleted) {
+      return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -139,6 +139,31 @@ export async function updateCreator(id, updates) {
   return updated;
 }
 
+export async function deleteCreator(id) {
+  const existing = await getCreator(id);
+  if (!existing) return false;
+
+  if (useMemory()) {
+    memStore.delete(`creator:${id}`);
+    const idx = memIndex.findIndex(s => s.id === id);
+    if (idx >= 0) memIndex.splice(idx, 1);
+  } else {
+    const redis = getRedis();
+    await redis.del(`creator:${id}`);
+    // Remove from sorted set index
+    const allMembers = await redis.zrange('creators:index', 0, -1);
+    for (const m of allMembers) {
+      const parsed = typeof m === 'string' ? JSON.parse(m) : m;
+      if (parsed.id === id) {
+        await redis.zrem('creators:index', typeof m === 'string' ? m : JSON.stringify(m));
+        break;
+      }
+    }
+  }
+
+  return true;
+}
+
 export async function searchCreators(query) {
   const all = await listCreators();
   const q = query.toLowerCase();
