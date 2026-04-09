@@ -4,6 +4,14 @@ const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAAAlCAAAAAAi
 
 const TOOLS = [
   {
+    name: "Creator CRM",
+    description: "Base de dados central de todos os criadores. Perfil, pesquisa automatica, notas de reuniao e acesso direto a todas as ferramentas. A single source of truth.",
+    url: "/creators",
+    status: "live",
+    icon: "\uD83D\uDC65",
+    span: true,
+  },
+  {
     name: "Offer Builder",
     description: "Build Grand Slam Offers using Hormozi frameworks. AI-powered creator research, offer design, blind spot audit, objection playbook, and revenue projections.",
     url: "/offer-builder",
@@ -105,6 +113,7 @@ export default function Hub() {
                   textDecoration: "none", color: "inherit",
                   transition: "border-color 0.15s, background 0.15s",
                   cursor: "pointer",
+                  ...(tool.span ? { gridColumn: "1 / -1" } : {}),
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "#7A0E18"; e.currentTarget.style.background = "#0a0806"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "#1e1b17"; e.currentTarget.style.background = "#080604"; }}
