@@ -20,8 +20,8 @@ const TOOLS = [
   {
     name: "Creator Pitch Page",
     description: "Generate a shareable, branded pitch page for each creator. Shows the opportunity, the offer, revenue projections, and what Second Layer builds.",
-    url: null,
-    status: "planned",
+    url: "/pitch",
+    status: "live",
     icon: "\uD83C\uDFAF",
   },
   {
