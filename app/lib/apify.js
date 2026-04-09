@@ -60,7 +60,7 @@ async function runApifyActor(actorId, input, timeoutSecs = 120) {
  * Returns structured creator data
  */
 async function scrapeInstagram(username) {
-  const items = await runApifyActor('apify/instagram-profile-scraper', {
+  const items = await runApifyActor('apify~instagram-profile-scraper', {
     usernames: [username],
   });
 
@@ -106,7 +106,7 @@ async function scrapeInstagram(username) {
  * Returns structured creator data
  */
 async function scrapeTikTok(username) {
-  const items = await runApifyActor('clockworks/tiktok-profile-scraper', {
+  const items = await runApifyActor('clockworks~tiktok-profile-scraper', {
     profiles: [username],
     resultsPerPage: 5,
     profileScrapeSections: ['videos'],
