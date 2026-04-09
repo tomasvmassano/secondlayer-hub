@@ -14,45 +14,29 @@ function hasApify() {
   return !!APIFY_TOKEN;
 }
 
-async function runApifyActor(actorId, input, timeoutSecs = 120) {
-  // Start the run
-  const startRes = await fetch(
-    `https://api.apify.com/v2/acts/${actorId}/runs?token=${APIFY_TOKEN}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
+async function runApifyActor(actorId, input) {
+  // Use sync API with 45-second timeout (fits within Vercel's 60s limit)
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 50000);
+
+  try {
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=45`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) {
+      const err = await res.text().catch(() => '');
+      throw new Error(`Apify error ${res.status}: ${err.slice(0, 200)}`);
     }
-  );
-  if (!startRes.ok) {
-    const err = await startRes.text().catch(() => '');
-    throw new Error(`Apify start error ${startRes.status}: ${err}`);
+    return res.json();
+  } finally {
+    clearTimeout(timeout);
   }
-  const run = await startRes.json();
-  const runId = run.data?.id;
-  if (!runId) throw new Error('No run ID returned');
-
-  // Poll for completion
-  const deadline = Date.now() + timeoutSecs * 1000;
-  let status = run.data?.status;
-  let datasetId = run.data?.defaultDatasetId;
-
-  while (status !== 'SUCCEEDED' && status !== 'FAILED' && status !== 'ABORTED' && Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 2000));
-    const pollRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${APIFY_TOKEN}`);
-    if (pollRes.ok) {
-      const pollData = await pollRes.json();
-      status = pollData.data?.status;
-      datasetId = pollData.data?.defaultDatasetId || datasetId;
-    }
-  }
-
-  if (status !== 'SUCCEEDED') throw new Error(`Apify run ${status || 'TIMEOUT'}`);
-
-  // Get dataset items
-  const dataRes = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${APIFY_TOKEN}`);
-  if (!dataRes.ok) throw new Error(`Apify dataset error ${dataRes.status}`);
-  return dataRes.json();
 }
 
 /**
